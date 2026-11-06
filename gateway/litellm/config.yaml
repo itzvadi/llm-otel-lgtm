@@ -1,0 +1,12 @@
+# One OpenAI-compatible endpoint (http://localhost:4000) for every provider.
+# Point existing apps at it to get traces without changing their code.
+model_list:
+  - model_name: gpt-4o-mini
+    litellm_params: { model: openai/gpt-4o-mini, api_key: os.environ/OPENAI_API_KEY }
+  - model_name: claude-sonnet-4-5
+    litellm_params: { model: anthropic/claude-sonnet-4-5, api_key: os.environ/ANTHROPIC_API_KEY }
+  - model_name: grok-3-mini
+    litellm_params: { model: xai/grok-3-mini, api_key: os.environ/XAI_API_KEY }
+
+litellm_settings:
+  callbacks: ["otel"]
