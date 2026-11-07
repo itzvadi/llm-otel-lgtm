@@ -1,105 +1,111 @@
 # llm-otel-lgtm by itzvadi
 
-Monitor **OpenAI ChatGPT, Anthropic Claude and xAI Grok** in one place with **OpenTelemetry** and the **Grafana LGTM** stack (Loki, Grafana, Tempo, Mimir/Prometheus). It comes with pre-built dashboards and runs on a laptop or on Kubernetes for a whole company.
+Monitor **Claude Code, OpenAI Codex and your own LLM apps** (OpenAI, Anthropic Claude, xAI Grok, Gemini,
+Mistral, Ollama and any OpenAI-compatible model) in one place, with **OpenTelemetry** and the
+**Grafana LGTM** stack (Loki, Grafana, Tempo, Prometheus/Mimir).
 
-## How it works
+It runs on a laptop in five minutes or on Kubernetes for a whole company, and ships with tabbed
+Grafana 13 dashboards you can edit in the UI.
 
-```mermaid
-flowchart LR
-    A["Your Python app<br/>(OpenAI · Claude · Grok)"] -->|OTLP| C["OpenTelemetry<br/>Collector"]
-    G["LiteLLM gateway<br/>(optional)"] -->|OTLP| C
-    C --> T["Tempo<br/>traces"]
-    C --> M["Prometheus / Mimir<br/>metrics"]
-    C --> L["Loki<br/>logs"]
-    T --> D["Grafana<br/>dashboards"]
-    M --> D
-    L --> D
-```
+![Architecture: sources send OTLP to the OpenTelemetry Collector, which stores metrics in Prometheus, logs in Loki and traces in Tempo, shown in Grafana dashboards](docs/architecture.png)
 
-1. Your app calls an LLM through `llm_telemetry.chat()` (or through the optional gateway).
-2. Each call sends a **trace**, **metrics** (requests, tokens, cost, latency) and a **log event** to the collector.
-3. The collector stores them in Tempo, Prometheus/Mimir and Loki.
-4. Grafana shows everything on ready-made dashboards.
+## Quick start
 
-## Quick start (5 minutes, no API keys needed)
-
-Requires Docker with Compose.
+Requires Docker with Compose. On macOS without Docker Desktop:
+`brew install colima docker docker-compose && colima start`.
 
 ```bash
-cd deploy/local
+git clone https://github.com/itzvadi/llm-otel-lgtm
+cd llm-otel-lgtm/deploy/local
 cp .env.example .env
-docker compose --profile demo up -d      # stack + simulated traffic
+docker compose up -d
 ```
 
-Open **http://localhost:3000**. The dashboards are in the **LLM Observability** folder and fill up within about a minute.
+Open **http://localhost:3000**. The stack starts empty, with no simulated data. Connect a source and
+its data appears within seconds:
 
-Stop everything with `docker compose --profile demo down`.
+| You use | Do this | See it in |
+|---|---|---|
+| **Claude Code** (any plan, no API key) | Add the telemetry `env` block to `~/.claude/settings.json` | AI Coding Agents → Claude Code |
+| **Codex CLI** (ChatGPT plan or API key) | Add an `[otel]` section to `~/.codex/config.toml` | AI Coding Agents → Codex |
+| **Your Python app** | `pip install` the library and call `llm_telemetry.chat()` or wrap calls in `track()` | LLM Observability |
+| **Any app, no code changes** | Start with `--profile gateway` and point it at `http://localhost:4000` | LLM Observability → Traces & Logs |
 
-## Choose your options
+**➡ Step-by-step setup for each one, including how to add any other LLM: [docs/add-your-llm.md](docs/add-your-llm.md)**
+
+The shortest path, if you use Claude Code, is to put this in `~/.claude/settings.json` and restart it:
+
+```json
+{
+  "env": {
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+    "OTEL_METRICS_EXPORTER": "otlp",
+    "OTEL_LOGS_EXPORTER": "otlp",
+    "OTEL_EXPORTER_OTLP_PROTOCOL": "grpc",
+    "OTEL_EXPORTER_OTLP_ENDPOINT": "http://localhost:4317",
+    "OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE": "cumulative"
+  }
+}
+```
+
+Stop the stack with `docker compose down`. Data and dashboard edits are kept in Docker volumes; add `-v`
+to delete them.
+
+## Dashboards
+
+Both dashboards are in the **LLM Observability** folder, use tabs, and can be filtered by the variables
+at the top.
+
+**LLM Observability**, for apps using the Python library or gateway. Filters: service, provider, model.
+
+| Tab | Shows |
+|---|---|
+| Overview | Requests, tokens, cost, error rate, 429s, p95 time to first token, p95 latency, by provider |
+| Providers | Scorecard per provider/model: latency, errors, tokens, cost per request |
+| Cost & Tokens | Spend, projected daily spend, spend share, tokens by model |
+| Latency & Errors | Latency and time-to-first-token percentiles by model, errors by type, rate limits |
+| Traces & Logs | Recent, slow and failed traces, request events, prompts (if enabled) |
+
+**AI Coding Agents**, for Claude Code and Codex CLI. Filters: user, model.
+
+| Tab | Shows |
+|---|---|
+| Claude Code | Cost, prompts, requests, sessions, cache hit rate, time to first token, API latency, errors, spend by model and source, tool calls (success rate, duration), permission decisions, lines of code, commits, PRs, usage per user |
+| Codex | Prompts, responses, input/cached/output/reasoning tokens, time to first token (turn and response), turn duration, API latency and status codes, failures, tool calls and decisions, conversations by model and settings, usage per user |
+
+Totals on the agent tabs are added up from per-request log events, so they are exact even for short CLI
+sessions.
+
+### Editing dashboards
+
+- **In the UI:** edit and save as usual. Changes are stored in Grafana's volume and survive restarts.
+  Export the JSON (Edit → Export) to keep a change in git.
+- **As code:** edit `scripts/generate_dashboards.py`, then run:
+
+  ```bash
+  python scripts/generate_dashboards.py
+  docker compose -f deploy/local/docker-compose.yml restart grafana
+  ```
+
+  Regenerating overwrites UI edits to the same dashboard.
+
+## Options
 
 All options live in `deploy/local/.env`.
 
 | Option | Values | What it does |
 |---|---|---|
-| `PROMPT_LOGGING` | `off` (default) / `on` | `off`: only metadata is stored (tokens, model, latency, cost), and the collector strips any prompt text it receives. `on`: prompts and responses are stored in Loki and shown on the *Traces & Logs* dashboard. |
-| Gateway | add `--profile gateway` | Starts a LiteLLM proxy on `http://localhost:4000`, so apps can be traced without code changes. |
-| `LLM_MOCK` | `true` / `false` | The demo generator simulates traffic (`true`) or makes real API calls (`false`, needs keys). |
-
-Example with everything on:
+| `PROMPT_LOGGING` | `off` (default) / `on` | `off`: only metadata is stored (tokens, model, latency, cost). The collector strips prompt and response text from every source, including Claude Code and Codex, even when a client is set to send it. `on`: prompts and responses are kept in Loki. |
+| Gateway | `--profile gateway` | Starts a LiteLLM proxy on `http://localhost:4000`. Apps send `LITELLM_MASTER_KEY` (default `sk-local-dev`) as their API key. |
+| `LGTM_VERSION`, `COLLECTOR_VERSION`, `GRAFANA_VERSION`, `LITELLM_VERSION` | image tags | Pinned by default for reproducible installs. |
 
 ```bash
-PROMPT_LOGGING=on docker compose --profile gateway --profile demo up -d
+PROMPT_LOGGING=on docker compose --profile gateway up -d
 ```
-
-## Option A: instrument your Python app
-
-```bash
-pip install -r instrumentation/python/requirements.txt
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
-export OTEL_SERVICE_NAME=my-app
-export PROMPT_LOGGING=off
-```
-
-```python
-import llm_telemetry
-
-llm_telemetry.setup()
-
-msgs = [{"role": "user", "content": "Hello!"}]
-llm_telemetry.chat("openai",    "gpt-4o-mini",       msgs)  # OPENAI_API_KEY
-llm_telemetry.chat("anthropic", "claude-haiku-4-5",  msgs)  # ANTHROPIC_API_KEY
-llm_telemetry.chat("xai",       "grok-3-mini",       msgs)  # XAI_API_KEY
-
-llm_telemetry.shutdown()
-```
-
-See `instrumentation/python/examples/quickstart.py`.
-
-## Option B: use the gateway (no code changes)
-
-Start the stack with `--profile gateway`, then point any OpenAI-compatible client at the proxy:
-
-```python
-from openai import OpenAI
-client = OpenAI(base_url="http://localhost:4000", api_key="anything")
-client.chat.completions.create(model="claude-sonnet-4-5", messages=[{"role": "user", "content": "Hi"}])
-```
-
-Models are listed in `gateway/litellm/config.yaml`. Gateway calls show up as traces in Tempo; the metric dashboards are fed by the Python library.
-
-## Dashboards
-
-| Dashboard | Shows |
-|---|---|
-| **LLM Overview** | Requests, tokens, cost, error rate, p95 latency by provider |
-| **LLM Provider Comparison** | Scorecard of every provider/model: latency, errors, tokens, cost per request |
-| **LLM Cost & Tokens** | Spend, projected daily spend, spend share, token usage |
-| **LLM Latency & Errors** | p50/p95/p99, time to first token, error rate, errors by type (e.g. 429) |
-| **LLM Traces & Logs** | Recent, slow and failed traces, request logs, prompts (if enabled) |
-
-Every dashboard can be filtered by **service**, **provider** and **model**.
 
 ## What is collected
+
+**From the Python library** (`llm_telemetry`):
 
 | Signal | Name | Labels |
 |---|---|---|
@@ -112,7 +118,15 @@ Every dashboard can be filtered by **service**, **provider** and **model**.
 | Log | `llm.request` | metadata only |
 | Log | `gen_ai.content` | prompt and response, only with `PROMPT_LOGGING=on` |
 
-Cost uses the prices in `instrumentation/python/llm_telemetry/pricing.yaml`. The values there are **examples**; update them to current provider prices.
+`error_type` is normalized across SDKs: `rate_limit_429`, `server_error_5xx`, `auth_401/403`,
+`client_error_4xx`, `timeout`, `connection_error`.
+
+**From Claude Code and Codex:** their own built-in metrics (`claude_code_*`, `codex_*`) and events
+(`api_request`, `tool_result`, `codex.sse_event`, …). See [docs/add-your-llm.md](docs/add-your-llm.md).
+
+Cost for the Python library uses `instrumentation/python/llm_telemetry/pricing.yaml`. The values are
+**examples**: update them to current provider prices, or set `LLM_PRICING_FILE`. Claude Code reports its
+own cost. Codex reports none.
 
 ## Repository layout
 
@@ -120,14 +134,13 @@ Cost uses the prices in `instrumentation/python/llm_telemetry/pricing.yaml`. The
 deploy/local/            docker compose for local use
 collector/               OpenTelemetry Collector configs (prompts off / on)
 gateway/litellm/         optional LiteLLM gateway config
-instrumentation/python/  llm_telemetry library + examples
-grafana/                 datasources, dashboard provisioning, dashboards
+instrumentation/python/  llm_telemetry library (pip-installable) + quickstart example
+grafana/                 datasources, dashboard provisioning, dashboards (v2 schema, tabs)
 scripts/                 dashboard generator
-docs/                    enterprise deployment guide
+docs/                    connect-your-LLM guide, enterprise guide, architecture image
 ```
-
-To change a dashboard, edit `scripts/generate_dashboards.py` and run `python scripts/generate_dashboards.py`.
 
 ## Enterprise
 
-See [docs/enterprise.md](docs/enterprise.md) for Kubernetes, multi-tenancy, SSO and retention.
+See [docs/enterprise.md](docs/enterprise.md) for Kubernetes, multi-tenancy, SSO, retention, and
+rolling out Claude Code and Codex telemetry to a whole team.
