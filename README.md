@@ -14,6 +14,34 @@ Grafana 13 dashboards you can edit in the UI.
 Requires Docker with Compose. On macOS without Docker Desktop:
 `brew install colima docker docker-compose && colima start`.
 
+### Option 1: setup wizard (recommended)
+
+```bash
+git clone https://github.com/itzvadi/llm-otel-lgtm
+cd llm-otel-lgtm
+python3 setup_wizard.py
+```
+
+The wizard asks a few questions and then does the rest:
+
+1. Checks for Docker, Claude Code and Codex.
+2. Asks which sources you use, whether to store prompt text, and whether to use a local stack or a
+   company collector.
+3. Adds the telemetry settings to `~/.claude/settings.json` and `~/.codex/config.toml`. Each file is
+   backed up first, and your other settings are kept.
+4. Starts the stack and sends a test event end to end.
+
+It needs only Python 3.9+, with no extra packages.
+
+| Command | Does |
+|---|---|
+| `python3 setup_wizard.py --dry-run` | Shows what would change, without changing anything |
+| `python3 setup_wizard.py --yes --sources claude,codex` | Runs without questions, for scripts and fleet rollout |
+| `python3 setup_wizard.py --yes --collector http://otel.example.com:4317 --sources claude` | Points the tools at a shared collector |
+| `python3 setup_wizard.py --uninstall` | Removes the settings it added |
+
+### Option 2: manual
+
 ```bash
 git clone https://github.com/itzvadi/llm-otel-lgtm
 cd llm-otel-lgtm/deploy/local
@@ -50,6 +78,34 @@ The shortest path, if you use Claude Code, is to put this in `~/.claude/settings
 
 Stop the stack with `docker compose down`. Data and dashboard edits are kept in Docker volumes; add `-v`
 to delete them.
+
+## Screenshots
+
+Captured from the running stack on 2026-11-07, with each time range zoomed to when that traffic ran.
+Emails and local paths are redacted.
+
+**AI Coding Agents**: real Claude Code (Pro plan) and Codex CLI (ChatGPT plan) sessions.
+
+[![Claude Code tab](docs/screenshots/ai-coding-agents-claude-code.png)](docs/screenshots/ai-coding-agents-claude-code.png)
+
+| Tab | Screenshot |
+|---|---|
+| Claude Code | [cost, tokens, time to first token, tools, decisions, lines of code](docs/screenshots/ai-coding-agents-claude-code.png) |
+| Codex | [tokens, cached input, time to first token, API status, conversations](docs/screenshots/ai-coding-agents-codex.png) |
+
+**LLM Observability**: the Python library's end-to-end test. The OpenAI, Anthropic and xAI SDKs, a
+custom provider and the gateway ran against a local API stand-in. Models named `*-ratelimit`, `*-boom`
+and `*-slow` deliberately return 429s, 500s and slow responses.
+
+[![LLM Observability overview tab](docs/screenshots/llm-observability-overview.png)](docs/screenshots/llm-observability-overview.png)
+
+| Tab | Screenshot |
+|---|---|
+| Overview | [requests, tokens, cost, error rate, 429s, time to first token, latency](docs/screenshots/llm-observability-overview.png) |
+| Providers | [scorecard, p95 latency and cost per 1k requests by model](docs/screenshots/llm-observability-providers.png) |
+| Cost & Tokens | [spend, projected spend, spend share, tokens by model](docs/screenshots/llm-observability-cost-tokens.png) |
+| Latency & Errors | [latency and time-to-first-token percentiles, errors by type, rate limits](docs/screenshots/llm-observability-latency-errors.png) |
+| Traces & Logs | [recent, slow and failed traces, request events](docs/screenshots/llm-observability-traces-logs.png) |
 
 ## Dashboards
 
@@ -138,6 +194,8 @@ instrumentation/python/  llm_telemetry library (pip-installable) + quickstart ex
 grafana/                 datasources, dashboard provisioning, dashboards (v2 schema, tabs)
 scripts/                 dashboard generator
 docs/                    connect-your-LLM guide, enterprise guide, architecture image
+docs/screenshots/        dashboard screenshots
+setup_wizard.py          interactive setup (python3 setup_wizard.py)
 ```
 
 ## Enterprise

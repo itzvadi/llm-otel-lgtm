@@ -67,7 +67,7 @@
     ],
     "timeSettings": {
       "timezone": "browser",
-      "from": "now-6h",
+      "from": "now-1h",
       "to": "now",
       "autoRefresh": "30s",
       "autoRefreshIntervals": [
@@ -209,7 +209,19 @@
               },
               "fieldConfig": {
                 "defaults": {
-                  "unit": "currencyUSD"
+                  "unit": "currencyUSD",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
                 },
                 "overrides": []
               }
@@ -274,6 +286,18 @@
               "fieldConfig": {
                 "defaults": {
                   "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
                   "decimals": 0
                 },
                 "overrides": []
@@ -339,6 +363,18 @@
               "fieldConfig": {
                 "defaults": {
                   "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
                   "decimals": 0
                 },
                 "overrides": []
@@ -404,6 +440,18 @@
               "fieldConfig": {
                 "defaults": {
                   "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
                   "decimals": 0
                 },
                 "overrides": []
@@ -468,7 +516,19 @@
               },
               "fieldConfig": {
                 "defaults": {
-                  "unit": "percentunit"
+                  "unit": "percentunit",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
                 },
                 "overrides": []
               }
@@ -616,7 +676,19 @@
               },
               "fieldConfig": {
                 "defaults": {
-                  "unit": "ms"
+                  "unit": "ms",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
                 },
                 "overrides": []
               }
@@ -1665,6 +1737,18 @@
               "fieldConfig": {
                 "defaults": {
                   "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
                   "decimals": 0
                 },
                 "overrides": []
@@ -1729,6 +1813,18 @@
               "fieldConfig": {
                 "defaults": {
                   "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
                   "decimals": 0
                 },
                 "overrides": []
@@ -1792,7 +1888,19 @@
               },
               "fieldConfig": {
                 "defaults": {
-                  "unit": "s"
+                  "unit": "s",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
                 },
                 "overrides": []
               }
@@ -1856,6 +1964,18 @@
               "fieldConfig": {
                 "defaults": {
                   "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
                   "decimals": 0
                 },
                 "overrides": []
@@ -1920,6 +2040,18 @@
               "fieldConfig": {
                 "defaults": {
                   "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
                   "decimals": 0
                 },
                 "overrides": []
@@ -1983,7 +2115,19 @@
               },
               "fieldConfig": {
                 "defaults": {
-                  "unit": "percentunit"
+                  "unit": "percentunit",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
                 },
                 "overrides": []
               }
@@ -2295,6 +2439,18 @@
               "fieldConfig": {
                 "defaults": {
                   "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
                   "decimals": 0
                 },
                 "overrides": []
@@ -2360,6 +2516,18 @@
               "fieldConfig": {
                 "defaults": {
                   "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
                   "decimals": 0
                 },
                 "overrides": []
@@ -2425,6 +2593,18 @@
               "fieldConfig": {
                 "defaults": {
                   "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
                   "decimals": 0
                 },
                 "overrides": []
@@ -2489,7 +2669,19 @@
               },
               "fieldConfig": {
                 "defaults": {
-                  "unit": "percentunit"
+                  "unit": "percentunit",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
                 },
                 "overrides": []
               }
@@ -2554,6 +2746,18 @@
               "fieldConfig": {
                 "defaults": {
                   "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
                   "decimals": 0
                 },
                 "overrides": []
@@ -2619,6 +2823,18 @@
               "fieldConfig": {
                 "defaults": {
                   "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
                   "decimals": 0
                 },
                 "overrides": []

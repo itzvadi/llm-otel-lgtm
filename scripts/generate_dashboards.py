@@ -22,10 +22,12 @@ def _q(group, spec):
             "datasource": {"name": group}, "spec": spec}
 
 
-def prom(expr, legend="", instant=False):
+def prom(expr, legend="", instant=False, table=True):
+    """instant + table: one row per series (tables). instant + table=False: one value per
+    series named by legend (pie charts, bar gauges)."""
     spec = {"expr": expr, "legendFormat": legend}
     if instant:
-        spec.update(instant=True, range=False, format="table")
+        spec.update(instant=True, range=False, format="table" if table else "time_series")
     return _q("prometheus", spec)
 
 
@@ -77,6 +79,8 @@ class Board:
 
     # common panel shapes
     def stat(self, title, q, x, y, w=4, h=4, unit="short", **kw):
+        # No thresholds given -> one neutral colour (Grafana's default turns values > 80 red).
+        kw.setdefault("thresholds", [{"color": "text", "value": None}])
         self.add("stat", title, [q], x, y, w, h, unit, options={
             "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": False},
             "colorMode": "value", "graphMode": "none", "textMode": "auto", "justifyMode": "auto"}, **kw)
@@ -138,7 +142,7 @@ def dashboard(uid, title, desc, board, variables):
                 "enable": True, "hide": True, "iconColor": "rgba(0, 211, 255, 1)",
                 "name": "Annotations & Alerts", "builtIn": True,
                 "legacyOptions": {"type": "dashboard"}}}],
-            "timeSettings": {"timezone": "browser", "from": "now-6h", "to": "now", "autoRefresh": "30s",
+            "timeSettings": {"timezone": "browser", "from": "now-1h", "to": "now", "autoRefresh": "30s",
                              "autoRefreshIntervals": ["10s", "30s", "1m", "5m", "15m", "30m", "1h"],
                              "hideTimepicker": False, "fiscalYearStartMonth": 0},
             "variables": variables,
@@ -198,7 +202,7 @@ def llm_observability():
     sel = "sum by (provider, model)"
     by = "sum by (provider, model, le)"
     b.table("Provider & model scorecard", [
-        prom(f"{sel} (increase(llm_requests_total{F}[$__range]))", instant=True),
+        prom(f"round({sel} (increase(llm_requests_total{F}[$__range])))", instant=True),
         prom(f"histogram_quantile(0.5, {by} (rate(llm_request_duration_seconds_bucket{F}[$__range])))", instant=True),
         prom(f"histogram_quantile(0.95, {by} (rate(llm_request_duration_seconds_bucket{F}[$__range])))", instant=True),
         prom(f'{sel} (rate(llm_requests_total{{{FS}, status="error"}}[$__range])) / {sel} (rate(llm_requests_total{F}[$__range]))', instant=True),
@@ -207,14 +211,16 @@ def llm_observability():
         prom(f'{sel} (increase(llm_cost_usd_total{F}[$__range])) / {sel} (increase(llm_requests_total{{{FS}, status="ok"}}[$__range]))', instant=True),
     ], ["Requests", "p50 latency (s)", "p95 latency (s)", "Error rate", "Avg output tokens", "Total cost ($)",
         "Cost / request ($)"], 0, 0, h=10, desc="Side-by-side comparison for the selected time range.")
-    b.add("barchart", "p95 latency by model", [prom(
+    bars = {"orientation": "horizontal", "displayMode": "gradient", "showUnfilled": True,
+            "valueMode": "color", "namePlacement": "left", "sizing": "auto",
+            "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": False}}
+    b.add("bargauge", "p95 latency by model", [prom(
         f"histogram_quantile(0.95, {by} (rate(llm_request_duration_seconds_bucket{F}[$__range])))",
-        "{{provider}}/{{model}}", instant=True)], 0, 10, 12, 9, "s",
-        transforms=[("reduce", {"reducers": ["lastNotNull"]})])
-    b.add("barchart", "Cost per 1k requests by model", [prom(
+        "{{provider}}/{{model}}", instant=True, table=False)], 0, 10, 12, 9, "s", options=bars, thresholds=LAT)
+    b.add("bargauge", "Cost per 1k requests by model", [prom(
         f'1000 * {sel} (increase(llm_cost_usd_total{F}[$__range])) / {sel} (increase(llm_requests_total{{{FS}, status="ok"}}[$__range]))',
-        "{{provider}}/{{model}}", instant=True)], 12, 10, 12, 9, "currencyUSD",
-        transforms=[("reduce", {"reducers": ["lastNotNull"]})])
+        "{{provider}}/{{model}}", instant=True, table=False)], 12, 10, 12, 9, "currencyUSD", options=bars,
+        thresholds=[{"color": "blue", "value": None}])
 
     b.tab("Cost & Tokens")
     b.stat("Spend (range)", prom(f"sum(increase(llm_cost_usd_total{F}[$__range]))"), 0, 0, 6, unit="currencyUSD")
@@ -222,7 +228,7 @@ def llm_observability():
     b.stat("Input tokens", prom(f'sum(increase(llm_tokens_total{{{FS}, token_type="input"}}[$__range]))'), 12, 0, 6, decimals=0)
     b.stat("Output tokens", prom(f'sum(increase(llm_tokens_total{{{FS}, token_type="output"}}[$__range]))'), 18, 0, 6, decimals=0)
     b.add("piechart", "Spend share by provider", [prom(
-        f"sum by (provider) (increase(llm_cost_usd_total{F}[$__range]))", "{{provider}}", instant=True)],
+        f"sum by (provider) (increase(llm_cost_usd_total{F}[$__range]))", "{{provider}}", instant=True, table=False)],
         0, 4, 8, 9, "currencyUSD", options={"pieType": "donut", "legend": {"displayMode": "table",
                                                                           "placement": "right", "values": ["value", "percent"]},
                                             "reduceOptions": {"calcs": ["lastNotNull"]}})

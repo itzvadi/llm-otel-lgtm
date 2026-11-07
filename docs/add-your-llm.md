@@ -1,5 +1,8 @@
 # Connect your LLM
 
+> **Shortcut:** `python3 setup_wizard.py` in the repo root sets up Claude Code and Codex for you, and
+> starts and checks the stack. This page explains each step, and how to connect anything else.
+
 Everything sends OpenTelemetry (OTLP) to one collector:
 
 | Endpoint | Protocol |
