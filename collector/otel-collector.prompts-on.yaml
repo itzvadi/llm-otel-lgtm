@@ -12,9 +12,12 @@ processors:
     limit_percentage: 80
     spike_limit_percentage: 20
   batch: {}
+  # Some clients (e.g. Claude Code) send delta metrics by default. Prometheus
+  # only stores cumulative ones, so convert here and every client just works.
+  delta_to_cumulative: {}
 
 exporters:
-  otlp/lgtm:
+  otlp_grpc/lgtm:
     endpoint: lgtm:4317
     tls: { insecure: true }
 
@@ -23,12 +26,12 @@ service:
     traces:
       receivers: [otlp]
       processors: [memory_limiter, batch]
-      exporters: [otlp/lgtm]
+      exporters: [otlp_grpc/lgtm]
     metrics:
       receivers: [otlp]
-      processors: [memory_limiter, batch]
-      exporters: [otlp/lgtm]
+      processors: [memory_limiter, delta_to_cumulative, batch]
+      exporters: [otlp_grpc/lgtm]
     logs:
       receivers: [otlp]
       processors: [memory_limiter, batch]
-      exporters: [otlp/lgtm]
+      exporters: [otlp_grpc/lgtm]

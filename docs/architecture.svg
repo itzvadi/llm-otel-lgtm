@@ -1,0 +1,197 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#111a2e"/>
+    </linearGradient>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8aa0c8"/>
+    </marker>
+    <marker id="ahM" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#f5a524"/></marker>
+    <marker id="ahL" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3ccf8e"/></marker>
+    <marker id="ahT" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#4ea1ff"/></marker>
+    <filter id="sh" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="1000" fill="url(#bg)"/>
+
+  <!-- Title -->
+  <text x="40" y="62" font-size="34" font-weight="700" fill="#ffffff">llm-otel-lgtm</text>
+  <text x="285" y="62" font-size="24" font-weight="400" fill="#9fb0d0">LLM observability with OpenTelemetry and Grafana LGTM</text>
+  <text x="40" y="98" font-size="17" fill="#8193b5">Claude Code, Codex and your own LLM apps send telemetry to one collector. Grafana shows cost, tokens, time to first token, latency, errors and tools.</text>
+
+  <!-- Legend -->
+  <g font-size="14" fill="#c9d4ea">
+    <rect x="40" y="122" width="14" height="14" rx="3" fill="#f5a524"/><text x="62" y="134">metrics</text>
+    <rect x="140" y="122" width="14" height="14" rx="3" fill="#3ccf8e"/><text x="162" y="134">logs / events</text>
+    <rect x="270" y="122" width="14" height="14" rx="3" fill="#4ea1ff"/><text x="292" y="134">traces</text>
+  </g>
+
+  <!-- Column headers -->
+  <g font-size="13" font-weight="700" fill="#6f84ad" letter-spacing="2">
+    <text x="40" y="178">1 · SOURCES</text>
+    <text x="520" y="178">2 · COLLECT</text>
+    <text x="910" y="178">3 · STORE</text>
+    <text x="1270" y="178">4 · SEE</text>
+  </g>
+
+  <!-- ===== Sources ===== -->
+  <g filter="url(#sh)">
+    <rect x="40" y="192" width="390" height="108" rx="14" fill="#1a2440" stroke="#d97757" stroke-width="2"/>
+    <rect x="40" y="318" width="390" height="108" rx="14" fill="#1a2440" stroke="#10a37f" stroke-width="2"/>
+    <rect x="40" y="444" width="390" height="108" rx="14" fill="#1a2440" stroke="#7c8cff" stroke-width="2"/>
+    <rect x="40" y="570" width="390" height="108" rx="14" fill="#1a2440" stroke="#b07cff" stroke-width="2"/>
+    <rect x="40" y="696" width="390" height="108" rx="14" fill="#1a2440" stroke="#5f7396" stroke-width="2"/>
+  </g>
+  <g fill="#ffffff">
+    <text x="62" y="228" font-size="20" font-weight="700">Claude Code</text>
+    <text x="62" y="254" font-size="14" fill="#a9b7d3">Pro / Max / Team / API. No API key needed</text>
+    <text x="62" y="278" font-size="13" fill="#7f91b3" font-family="Menlo, monospace">~/.claude/settings.json → env</text>
+
+    <text x="62" y="354" font-size="20" font-weight="700">OpenAI Codex CLI</text>
+    <text x="62" y="380" font-size="14" fill="#a9b7d3">ChatGPT plan or API key</text>
+    <text x="62" y="404" font-size="13" fill="#7f91b3" font-family="Menlo, monospace">~/.codex/config.toml → [otel]</text>
+
+    <text x="62" y="480" font-size="20" font-weight="700">Your Python app</text>
+    <text x="62" y="506" font-size="14" fill="#a9b7d3">llm_telemetry.chat() / track()</text>
+    <text x="62" y="530" font-size="13" fill="#7f91b3">OpenAI · Claude · Grok · Gemini · Mistral · Ollama …</text>
+
+    <text x="62" y="606" font-size="20" font-weight="700">Any app, no code changes</text>
+    <text x="62" y="632" font-size="14" fill="#a9b7d3">LiteLLM gateway (optional)</text>
+    <text x="62" y="656" font-size="13" fill="#7f91b3" font-family="Menlo, monospace">base_url = http://localhost:4000</text>
+
+    <text x="62" y="732" font-size="20" font-weight="700">Any OpenTelemetry tool</text>
+    <text x="62" y="758" font-size="14" fill="#a9b7d3">Standard OTLP exporter</text>
+    <text x="62" y="782" font-size="13" fill="#7f91b3" font-family="Menlo, monospace">OTEL_EXPORTER_OTLP_ENDPOINT</text>
+  </g>
+  <!-- signal dots per source -->
+  <g>
+    <circle cx="392" cy="222" r="7" fill="#f5a524"/><circle cx="410" cy="222" r="7" fill="#3ccf8e"/>
+    <circle cx="374" cy="348" r="7" fill="#f5a524"/><circle cx="392" cy="348" r="7" fill="#3ccf8e"/><circle cx="410" cy="348" r="7" fill="#4ea1ff"/>
+    <circle cx="374" cy="474" r="7" fill="#f5a524"/><circle cx="392" cy="474" r="7" fill="#3ccf8e"/><circle cx="410" cy="474" r="7" fill="#4ea1ff"/>
+    <circle cx="410" cy="600" r="7" fill="#4ea1ff"/>
+    <circle cx="374" cy="726" r="7" fill="#f5a524"/><circle cx="392" cy="726" r="7" fill="#3ccf8e"/><circle cx="410" cy="726" r="7" fill="#4ea1ff"/>
+  </g>
+
+  <!-- arrows sources -> collector -->
+  <g stroke="#8aa0c8" stroke-width="2.5" fill="none" marker-end="url(#ah)">
+    <path d="M430,246 C480,246 470,420 518,440"/>
+    <path d="M430,372 C480,372 480,460 518,470"/>
+    <path d="M430,498 L518,498"/>
+    <path d="M430,624 C480,624 480,536 518,526"/>
+    <path d="M430,750 C480,750 470,576 518,556"/>
+  </g>
+  <text x="436" y="488" font-size="12" fill="#8aa0c8" font-weight="600">OTLP</text>
+
+  <!-- ===== Collector ===== -->
+  <g filter="url(#sh)">
+    <rect x="520" y="300" width="330" height="400" rx="16" fill="#18223b" stroke="#f0b429" stroke-width="2.5"/>
+  </g>
+  <text x="545" y="342" font-size="21" font-weight="700" fill="#ffffff">OpenTelemetry Collector</text>
+  <text x="545" y="368" font-size="14" fill="#a9b7d3" font-family="Menlo, monospace">:4317 gRPC   :4318 HTTP</text>
+  <g font-size="14" fill="#dfe7f7">
+    <rect x="545" y="392" width="280" height="56" rx="10" fill="#22304f"/>
+    <text x="562" y="416" font-weight="700">Prompt and PII guard</text>
+    <text x="562" y="437" fill="#a9b7d3" font-size="13">PROMPT_LOGGING=off drops prompt text</text>
+
+    <rect x="545" y="460" width="280" height="56" rx="10" fill="#22304f"/>
+    <text x="562" y="484" font-weight="700">Delta → cumulative</text>
+    <text x="562" y="505" fill="#a9b7d3" font-size="13">any client's metrics just work</text>
+
+    <rect x="545" y="528" width="280" height="56" rx="10" fill="#22304f"/>
+    <text x="562" y="552" font-weight="700">Memory limiter + batching</text>
+    <text x="562" y="573" fill="#a9b7d3" font-size="13">safe under bursts</text>
+
+    <rect x="545" y="596" width="280" height="80" rx="10" fill="#22304f"/>
+    <text x="562" y="620" font-weight="700">One endpoint for everything</text>
+    <text x="562" y="641" fill="#a9b7d3" font-size="13">laptop: localhost</text>
+    <text x="562" y="660" fill="#a9b7d3" font-size="13">company: one shared collector</text>
+  </g>
+
+  <!-- collector -> stores -->
+  <path d="M850,420 C880,420 880,262 908,262" stroke="#f5a524" stroke-width="3" fill="none" marker-end="url(#ahM)"/>
+  <path d="M850,500 C880,500 880,500 908,500" stroke="#3ccf8e" stroke-width="3" fill="none" marker-end="url(#ahL)"/>
+  <path d="M850,580 C880,580 880,738 908,738" stroke="#4ea1ff" stroke-width="3" fill="none" marker-end="url(#ahT)"/>
+
+  <!-- ===== Stores ===== -->
+  <rect x="900" y="192" width="330" height="612" rx="16" fill="none" stroke="#33415f" stroke-width="2" stroke-dasharray="6 6"/>
+  <text x="918" y="822" font-size="13" fill="#6f84ad" font-family="Menlo, monospace">grafana/otel-lgtm (Mimir / Loki / Tempo in production)</text>
+  <g filter="url(#sh)">
+    <rect x="918" y="210" width="294" height="170" rx="14" fill="#2a2412" stroke="#f5a524" stroke-width="2"/>
+    <rect x="918" y="414" width="294" height="170" rx="14" fill="#10291f" stroke="#3ccf8e" stroke-width="2"/>
+    <rect x="918" y="618" width="294" height="170" rx="14" fill="#0f2238" stroke="#4ea1ff" stroke-width="2"/>
+  </g>
+  <g fill="#ffffff">
+    <text x="938" y="246" font-size="21" font-weight="700">Prometheus</text>
+    <text x="938" y="270" font-size="14" fill="#f5c46a">metrics</text>
+    <text x="938" y="300" font-size="14" fill="#dfe7f7">requests · tokens · cost</text>
+    <text x="938" y="324" font-size="14" fill="#dfe7f7">latency · time to first token</text>
+    <text x="938" y="348" font-size="14" fill="#dfe7f7">errors by type (429, 5xx …)</text>
+
+    <text x="938" y="450" font-size="21" font-weight="700">Loki</text>
+    <text x="938" y="474" font-size="14" fill="#7fe3b6">logs / events</text>
+    <text x="938" y="504" font-size="14" fill="#dfe7f7">one event per API request</text>
+    <text x="938" y="528" font-size="14" fill="#dfe7f7">exact cost and tokens per user</text>
+    <text x="938" y="552" font-size="14" fill="#dfe7f7">tool calls · decisions · errors</text>
+
+    <text x="938" y="654" font-size="21" font-weight="700">Tempo</text>
+    <text x="938" y="678" font-size="14" fill="#9cc9ff">traces</text>
+    <text x="938" y="708" font-size="14" fill="#dfe7f7">GenAI spans (gen_ai.*)</text>
+    <text x="938" y="732" font-size="14" fill="#dfe7f7">slow and failed requests</text>
+    <text x="938" y="756" font-size="14" fill="#dfe7f7">gateway and app traces</text>
+  </g>
+
+  <!-- stores -> grafana -->
+  <g stroke="#8aa0c8" stroke-width="2.5" fill="none" marker-end="url(#ah)">
+    <path d="M1212,295 C1240,295 1240,400 1268,420"/>
+    <path d="M1212,499 L1268,499"/>
+    <path d="M1212,703 C1240,703 1240,600 1268,580"/>
+  </g>
+
+  <!-- ===== Grafana ===== -->
+  <g filter="url(#sh)">
+    <rect x="1270" y="192" width="290" height="612" rx="16" fill="#1d1a2e" stroke="#f46800" stroke-width="2.5"/>
+  </g>
+  <text x="1292" y="232" font-size="22" font-weight="700" fill="#ffffff">Grafana 13</text>
+  <text x="1292" y="256" font-size="14" fill="#a9b7d3" font-family="Menlo, monospace">http://localhost:3000</text>
+
+  <text x="1292" y="298" font-size="16" font-weight="700" fill="#ffb27a">LLM Observability</text>
+  <g font-size="13" fill="#ffffff">
+    <rect x="1292" y="310" width="96" height="28" rx="14" fill="#f46800"/><text x="1311" y="329">Overview</text>
+    <rect x="1396" y="310" width="96" height="28" rx="14" fill="#3a2f4f"/><text x="1412" y="329">Providers</text>
+    <rect x="1292" y="346" width="122" height="28" rx="14" fill="#3a2f4f"/><text x="1306" y="365">Cost &amp; Tokens</text>
+    <rect x="1422" y="346" width="120" height="28" rx="14" fill="#3a2f4f"/><text x="1432" y="365">Latency &amp; Errors</text>
+    <rect x="1292" y="382" width="122" height="28" rx="14" fill="#3a2f4f"/><text x="1306" y="401">Traces &amp; Logs</text>
+  </g>
+
+  <text x="1292" y="456" font-size="16" font-weight="700" fill="#ffb27a">AI Coding Agents</text>
+  <g font-size="13" fill="#ffffff">
+    <rect x="1292" y="468" width="112" height="28" rx="14" fill="#f46800"/><text x="1308" y="487">Claude Code</text>
+    <rect x="1412" y="468" width="80" height="28" rx="14" fill="#3a2f4f"/><text x="1429" y="487">Codex</text>
+  </g>
+
+  <g font-size="14" fill="#dfe7f7">
+    <text x="1292" y="540" font-weight="700" fill="#ffffff">Filter by</text>
+    <text x="1292" y="564">service · provider · model · user</text>
+    <text x="1292" y="604" font-weight="700" fill="#ffffff">Editable</text>
+    <text x="1292" y="628">change panels in the UI</text>
+    <text x="1292" y="650">edits survive restarts</text>
+    <text x="1292" y="690" font-weight="700" fill="#ffffff">Generated from code</text>
+    <text x="1292" y="714" font-family="Menlo, monospace" font-size="12">scripts/generate_dashboards.py</text>
+  </g>
+
+  <!-- ===== Bottom: what you monitor ===== -->
+  <text x="40" y="872" font-size="13" font-weight="700" fill="#6f84ad" letter-spacing="2">WHAT YOU MONITOR</text>
+  <g font-size="15" font-weight="600" fill="#ffffff">
+    <rect x="40"   y="890" width="160" height="56" rx="12" fill="#1a2440" stroke="#2c3a5c"/><text x="60"   y="924">$ Cost</text>
+    <rect x="212"  y="890" width="160" height="56" rx="12" fill="#1a2440" stroke="#2c3a5c"/><text x="232"  y="924"># Tokens</text>
+    <rect x="384"  y="890" width="216" height="56" rx="12" fill="#1a2440" stroke="#2c3a5c"/><text x="404"  y="924">⏱ Time to first token</text>
+    <rect x="612"  y="890" width="170" height="56" rx="12" fill="#1a2440" stroke="#2c3a5c"/><text x="632"  y="924">⌛ Latency p95</text>
+    <rect x="794"  y="890" width="196" height="56" rx="12" fill="#1a2440" stroke="#2c3a5c"/><text x="814"  y="924">⚠ Errors &amp; 429s</text>
+    <rect x="1002" y="890" width="176" height="56" rx="12" fill="#1a2440" stroke="#2c3a5c"/><text x="1022" y="924">♻ Cache hit rate</text>
+    <rect x="1190" y="890" width="176" height="56" rx="12" fill="#1a2440" stroke="#2c3a5c"/><text x="1210" y="924">🛠 Tool calls</text>
+    <rect x="1378" y="890" width="182" height="56" rx="12" fill="#1a2440" stroke="#2c3a5c"/><text x="1398" y="924">👤 Usage per user</text>
+  </g>
+</svg>

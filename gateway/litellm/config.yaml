@@ -1,5 +1,11 @@
 # One OpenAI-compatible endpoint (http://localhost:4000) for every provider.
-# Point existing apps at it to get traces without changing their code.
+# Point existing apps at it to get traces without changing their code:
+#   OpenAI(base_url="http://localhost:4000", api_key="<LITELLM_MASTER_KEY>")
+# Add any provider LiteLLM supports, e.g.:
+#   - model_name: gemini-flash
+#     litellm_params: { model: gemini/gemini-2.5-flash, api_key: os.environ/GEMINI_API_KEY }
+#   - model_name: llama3
+#     litellm_params: { model: ollama/llama3.2, api_base: "http://host.docker.internal:11434" }
 model_list:
   - model_name: gpt-4o-mini
     litellm_params: { model: openai/gpt-4o-mini, api_key: os.environ/OPENAI_API_KEY }

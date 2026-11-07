@@ -1,5 +1,6 @@
 # OpenTelemetry Collector - prompt logging OFF (default)
-# Prompt/response content is removed even if an app sends it.
+# Prompt/response content is removed even if an app sends it, whether it comes
+# from llm_telemetry (gen_ai.*) or from Claude Code (prompt, response, tool content).
 receivers:
   otlp:
     protocols:
@@ -12,19 +13,35 @@ processors:
     limit_percentage: 80
     spike_limit_percentage: 20
   batch: {}
+  # Some clients (e.g. Claude Code) send delta metrics by default. Prometheus
+  # only stores cumulative ones, so convert here and every client just works.
+  delta_to_cumulative: {}
   filter/drop_content:
     error_mode: ignore
     logs:
       log_record:
         - 'attributes["event.name"] == "gen_ai.content"'
+        # Claude Code raw API bodies (OTEL_LOG_RAW_API_BODIES)
+        - 'attributes["event.name"] == "api_request_body"'
+        - 'attributes["event.name"] == "api_response_body"'
   attributes/strip_content:
     actions:
+      # llm_telemetry / OpenTelemetry GenAI conventions
       - { key: gen_ai.prompt, action: delete }
       - { key: gen_ai.completion, action: delete }
       - { pattern: '^gen_ai\.(prompt|completion)\..*', action: delete }
+      # Claude Code (OTEL_LOG_USER_PROMPTS / OTEL_LOG_ASSISTANT_RESPONSES / OTEL_LOG_TOOL_*)
+      - { key: prompt, action: delete }
+      - { key: prompt_text, action: delete }
+      - { key: response, action: delete }
+      - { key: tool_input, action: delete }
+      - { key: tool_parameters, action: delete }
+      - { key: tool_content, action: delete }
+      # Uncomment to also remove personal identifiers (per-user cost by email is lost):
+      # - { key: user.email, action: delete }
 
 exporters:
-  otlp/lgtm:
+  otlp_grpc/lgtm:
     endpoint: lgtm:4317
     tls: { insecure: true }
 
@@ -33,12 +50,12 @@ service:
     traces:
       receivers: [otlp]
       processors: [memory_limiter, attributes/strip_content, batch]
-      exporters: [otlp/lgtm]
+      exporters: [otlp_grpc/lgtm]
     metrics:
       receivers: [otlp]
-      processors: [memory_limiter, batch]
-      exporters: [otlp/lgtm]
+      processors: [memory_limiter, delta_to_cumulative, batch]
+      exporters: [otlp_grpc/lgtm]
     logs:
       receivers: [otlp]
       processors: [memory_limiter, filter/drop_content, attributes/strip_content, batch]
-      exporters: [otlp/lgtm]
+      exporters: [otlp_grpc/lgtm]
