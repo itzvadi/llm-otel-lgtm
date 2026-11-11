@@ -1,12 +1,19 @@
 # USD per 1 million tokens. EXAMPLE VALUES - check each provider's
 # current price list and update before relying on cost dashboards.
 # Unknown models are recorded with cost 0.
+#
+# version: bump this whenever you change a rate. Every cost data point is
+#   labelled pricing_version=<version>, and cost is computed when the request
+#   is recorded, so editing rates never rewrites spend already stored.
+# cached_input: optional rate for cache-read input tokens (defaults to input).
+version: "2026-11-11"
+
 openai:
-  gpt-4o:        { input: 2.50, output: 10.00 }
-  gpt-4o-mini:   { input: 0.15, output: 0.60 }
+  gpt-4o:        { input: 2.50, cached_input: 1.25, output: 10.00 }
+  gpt-4o-mini:   { input: 0.15, cached_input: 0.075, output: 0.60 }
 anthropic:
-  claude-sonnet-4-5: { input: 3.00, output: 15.00 }
-  claude-haiku-4-5:  { input: 1.00, output: 5.00 }
+  claude-sonnet-4-5: { input: 3.00, cached_input: 0.30, output: 15.00 }
+  claude-haiku-4-5:  { input: 1.00, cached_input: 0.10, output: 5.00 }
 xai:
-  grok-4:        { input: 3.00, output: 15.00 }
-  grok-3-mini:   { input: 0.30, output: 0.50 }
+  grok-4:        { input: 3.00, cached_input: 0.75, output: 15.00 }
+  grok-3-mini:   { input: 0.30, cached_input: 0.075, output: 0.50 }
