@@ -29,7 +29,7 @@ from dataclasses import dataclass, field
 from opentelemetry import metrics, trace
 from opentelemetry.trace import SpanKind, Status, StatusCode
 
-from .pricing import cost_usd
+from .pricing import cost_breakdown, pricing_version
 from .telemetry import prompt_logging_enabled
 
 _tracer = trace.get_tracer("llm_telemetry")
@@ -37,8 +37,8 @@ _meter = metrics.get_meter("llm_telemetry")
 _log = logging.getLogger("llm_telemetry.events")
 
 _requests = _meter.create_counter("llm_requests", description="LLM requests")
-_tokens = _meter.create_counter("llm_tokens", description="Tokens by type (input/output)")
-_cost = _meter.create_counter("llm_cost_usd", description="Estimated cost in USD")
+_tokens = _meter.create_counter("llm_tokens", description="Tokens by type (input = uncached input, cached_input, output)")
+_cost = _meter.create_counter("llm_cost_usd", description="Estimated cost in USD by token type and pricing_version")
 _duration = _meter.create_histogram("llm_request_duration_seconds", description="Request latency")
 _ttft = _meter.create_histogram("llm_time_to_first_token_seconds", description="Time to first token")
 
@@ -109,7 +109,8 @@ def error_type(exc: BaseException) -> str:
 @dataclass
 class ChatResult:
     text: str = ""
-    input_tokens: int = 0
+    input_tokens: int = 0  # uncached input
+    cached_input_tokens: int = 0
     output_tokens: int = 0
     finish_reason: str = ""
     response_model: str = ""
@@ -132,10 +133,15 @@ class LLMCall:
             self.result.ttft = time.perf_counter() - self._start
 
     def set_usage(self, input_tokens: int | None = None, output_tokens: int | None = None,
-                  cost_usd: float | None = None) -> None:
-        """Token counts from the response; cost_usd overrides the pricing.yaml lookup."""
+                  cost_usd: float | None = None, cached_input_tokens: int | None = None) -> None:
+        """Token counts from the response; cost_usd overrides the pricing.yaml lookup.
+
+        input_tokens is uncached input only; pass cache reads as cached_input_tokens.
+        """
         if input_tokens is not None:
             self.result.input_tokens = int(input_tokens)
+        if cached_input_tokens is not None:
+            self.result.cached_input_tokens = int(cached_input_tokens)
         if output_tokens is not None:
             self.result.output_tokens = int(output_tokens)
         if cost_usd is not None:
@@ -180,29 +186,40 @@ def track(provider: str, model: str, messages=None, max_tokens: int | None = Non
 
         res = call.result
         elapsed = time.perf_counter() - call._start
-        res.cost_usd = call._cost if call._cost is not None else cost_usd(
-            provider, model, res.input_tokens, res.output_tokens)
+        if call._cost is not None:
+            costs, version = {"input": call._cost, "cached_input": 0.0, "output": 0.0}, "override"
+        else:
+            costs = cost_breakdown(provider, model, res.input_tokens, res.output_tokens,
+                                   res.cached_input_tokens)
+            version = pricing_version()
+        res.cost_usd = sum(costs.values())
         span.set_attribute("gen_ai.response.model", res.response_model)
         if res.finish_reason:
             span.set_attribute("gen_ai.response.finish_reasons", [res.finish_reason])
         span.set_attribute("gen_ai.usage.input_tokens", res.input_tokens)
         span.set_attribute("gen_ai.usage.output_tokens", res.output_tokens)
+        span.set_attribute("gen_ai.usage.cache_read.input_tokens", res.cached_input_tokens)
         span.set_attribute("llm.cost_usd", res.cost_usd)
+        span.set_attribute("llm.pricing_version", version)
         if res.ttft is not None:
             span.set_attribute("llm.time_to_first_token_s", res.ttft)
 
         _requests.add(1, {**labels, "status": "ok", "error_type": ""})
         _tokens.add(res.input_tokens, {**labels, "token_type": "input"})
+        _tokens.add(res.cached_input_tokens, {**labels, "token_type": "cached_input"})
         _tokens.add(res.output_tokens, {**labels, "token_type": "output"})
-        _cost.add(res.cost_usd, labels)
+        for token_type, usd in costs.items():
+            _cost.add(usd, {**labels, "token_type": token_type, "pricing_version": version})
         _duration.record(elapsed, {**labels, "status": "ok"})
         if res.ttft is not None:
             _ttft.record(res.ttft, labels)
 
         _log.info("llm.request", extra={"event.name": "llm.request", **labels, "status": "ok",
                                         "input_tokens": res.input_tokens,
+                                        "cached_input_tokens": res.cached_input_tokens,
                                         "output_tokens": res.output_tokens,
                                         "cost_usd": round(res.cost_usd, 6),
+                                        "pricing_version": version,
                                         "duration_s": round(elapsed, 3)})
         if prompt_logging_enabled():
             _log.info(json.dumps({"prompt": messages, "response": res.text}),
@@ -220,6 +237,14 @@ def _api_key(p: Provider) -> str | None:
     return key
 
 
+def _set_openai_usage(call: LLMCall, u) -> None:
+    # OpenAI-style prompt_tokens includes cached tokens; split them out.
+    details = getattr(u, "prompt_tokens_details", None)
+    cached = int(getattr(details, "cached_tokens", 0) or 0) if details else 0
+    call.set_usage(max(int(u.prompt_tokens or 0) - cached, 0), u.completion_tokens,
+                   cached_input_tokens=cached)
+
+
 def _call_openai_compatible(call: LLMCall, p: Provider, messages, max_tokens, stream, **kw) -> None:
     from openai import OpenAI
 
@@ -231,7 +256,7 @@ def _call_openai_compatible(call: LLMCall, p: Provider, messages, max_tokens, st
         c = r.choices[0]
         call.set_response(c.message.content or "", r.model, c.finish_reason)
         if r.usage:
-            call.set_usage(r.usage.prompt_tokens, r.usage.completion_tokens)
+            _set_openai_usage(call, r.usage)
         return
 
     parts, finish = [], None
@@ -245,7 +270,7 @@ def _call_openai_compatible(call: LLMCall, p: Provider, messages, max_tokens, st
                 parts.append(d.delta.content)
             finish = d.finish_reason or finish
         if getattr(chunk, "usage", None):
-            call.set_usage(chunk.usage.prompt_tokens, chunk.usage.completion_tokens)
+            _set_openai_usage(call, chunk.usage)
         if chunk.model:
             call.set_response(model=chunk.model)
     call.set_response("".join(parts), finish_reason=finish)
@@ -269,7 +294,10 @@ def _call_anthropic(call: LLMCall, p: Provider, messages, max_tokens, stream, **
         r = client.messages.create(**args)
     text = "".join(b.text for b in r.content if getattr(b, "type", "") == "text")
     call.set_response(text, r.model, r.stop_reason)
-    call.set_usage(r.usage.input_tokens, r.usage.output_tokens)
+    u = r.usage
+    call.set_usage((u.input_tokens or 0) + (getattr(u, "cache_creation_input_tokens", 0) or 0),
+                   u.output_tokens,
+                   cached_input_tokens=getattr(u, "cache_read_input_tokens", 0) or 0)
 
 
 # ---------- public API ----------

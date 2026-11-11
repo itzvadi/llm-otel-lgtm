@@ -166,8 +166,8 @@ PROMPT_LOGGING=on docker compose --profile gateway up -d
 | Signal | Name | Labels |
 |---|---|---|
 | Metric | `llm_requests_total` | provider, model, status, error_type |
-| Metric | `llm_tokens_total` | provider, model, token_type |
-| Metric | `llm_cost_usd_total` | provider, model |
+| Metric | `llm_tokens_total` | provider, model, token_type (`input` = uncached, `cached_input`, `output`) |
+| Metric | `llm_cost_usd_total` | provider, model, token_type, pricing_version |
 | Metric | `llm_request_duration_seconds` | provider, model, status |
 | Metric | `llm_time_to_first_token_seconds` | provider, model |
 | Trace | span `chat <model>` | OpenTelemetry GenAI attributes (`gen_ai.system`, `gen_ai.usage.*`, …) |
@@ -183,6 +183,8 @@ PROMPT_LOGGING=on docker compose --profile gateway up -d
 Cost for the Python library uses `instrumentation/python/llm_telemetry/pricing.yaml`. The values are
 **examples**: update them to current provider prices, or set `LLM_PRICING_FILE`. Claude Code reports its
 own cost. Codex reports none.
+
+Bump `version:` in that file whenever you change a rate: cost is computed when each request is recorded and labelled with `pricing_version`, so a rate change never rewrites spend already stored. The Cost & Tokens tab splits spend into uncached input, cached input and output, and shows spend per pricing version.
 
 ## Repository layout
 

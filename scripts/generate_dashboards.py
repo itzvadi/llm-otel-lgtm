@@ -223,10 +223,15 @@ def llm_observability():
         thresholds=[{"color": "blue", "value": None}])
 
     b.tab("Cost & Tokens")
-    b.stat("Spend (range)", prom(f"sum(increase(llm_cost_usd_total{F}[$__range]))"), 0, 0, 6, unit="currencyUSD")
-    b.stat("Projected spend / day", prom(f"sum(rate(llm_cost_usd_total{F}[1h])) * 86400"), 6, 0, 6, unit="currencyUSD")
-    b.stat("Input tokens", prom(f'sum(increase(llm_tokens_total{{{FS}, token_type="input"}}[$__range]))'), 12, 0, 6, decimals=0)
-    b.stat("Output tokens", prom(f'sum(increase(llm_tokens_total{{{FS}, token_type="output"}}[$__range]))'), 18, 0, 6, decimals=0)
+    b.stat("Spend (range)", prom(f"sum(increase(llm_cost_usd_total{F}[$__range]))"), 0, 0, 4, unit="currencyUSD")
+    b.stat("Projected spend / day", prom(f"sum(rate(llm_cost_usd_total{F}[1h])) * 86400"), 4, 0, 4, unit="currencyUSD")
+    b.stat("Uncached input tokens", prom(f'sum(increase(llm_tokens_total{{{FS}, token_type="input"}}[$__range]))'), 8, 0, 4, decimals=0)
+    b.stat("Cached input tokens", prom(f'sum(increase(llm_tokens_total{{{FS}, token_type="cached_input"}}[$__range]))'), 12, 0, 4, decimals=0)
+    b.stat("Output tokens", prom(f'sum(increase(llm_tokens_total{{{FS}, token_type="output"}}[$__range]))'), 16, 0, 4, decimals=0)
+    b.stat("Cache hit rate", prom(
+        f'sum(increase(llm_tokens_total{{{FS}, token_type="cached_input"}}[$__range])) / '
+        f'sum(increase(llm_tokens_total{{{FS}, token_type=~"input|cached_input"}}[$__range]))'),
+        20, 0, 4, unit="percentunit", decimals=1, desc="Share of input tokens served from the prompt cache")
     b.add("piechart", "Spend share by provider", [prom(
         f"sum by (provider) (increase(llm_cost_usd_total{F}[$__range]))", "{{provider}}", instant=True, table=False)],
         0, 4, 8, 9, "currencyUSD", options={"pieType": "donut", "legend": {"displayMode": "table",
@@ -235,8 +240,16 @@ def llm_observability():
     b.series("Spend by model", [prom(
         f"sum by (provider, model) (increase(llm_cost_usd_total{F}[$__interval]))", "{{provider}}/{{model}}")],
         8, 4, 16, 9, unit="currencyUSD", bars=True)
+    b.series("Spend by token type", [prom(
+        f"sum by (token_type) (increase(llm_cost_usd_total{F}[$__interval]))", "{{token_type}}")],
+        0, 13, 12, 8, unit="currencyUSD", bars=True,
+        desc="Uncached input vs cached input vs output. Rates come from pricing.yaml.")
+    b.table("Spend by pricing version", [prom(
+        f"sum by (pricing_version, provider, model) (increase(llm_cost_usd_total{F}[$__range]))", instant=True)],
+        ["Spend (USD)"], 12, 13, 12, 8, unit="currencyUSD", desc="Cost is computed when each request is recorded and labelled with the rate-table "
+        "version, so changing pricing.yaml never rewrites spend already stored.")
     b.series("Tokens / min by model", [prom(
-        f"sum by (model, token_type) (rate(llm_tokens_total{F}[{RI}])) * 60", "{{model}} {{token_type}}")], 0, 13, 24, 8)
+        f"sum by (model, token_type) (rate(llm_tokens_total{F}[{RI}])) * 60", "{{model}} {{token_type}}")], 0, 21, 24, 8)
 
     b.tab("Latency & Errors")
 

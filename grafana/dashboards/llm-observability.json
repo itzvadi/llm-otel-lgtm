@@ -1807,7 +1807,7 @@
         "kind": "Panel",
         "spec": {
           "id": 20,
-          "title": "Input tokens",
+          "title": "Uncached input tokens",
           "description": "",
           "links": [],
           "data": {
@@ -1883,6 +1883,82 @@
         "kind": "Panel",
         "spec": {
           "id": 21,
+          "title": "Cached input tokens",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "spec": {
+                        "expr": "sum(increase(llm_tokens_total{job=~\"$service\", provider=~\"$provider\", model=~\"$model\", token_type=\"cached_input\"}[$__range]))",
+                        "legendFormat": ""
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "",
+            "spec": {
+              "options": {
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "colorMode": "value",
+                "graphMode": "none",
+                "textMode": "auto",
+                "justifyMode": "auto"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "short",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "decimals": 0
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-22": {
+        "kind": "Panel",
+        "spec": {
+          "id": 22,
           "title": "Output tokens",
           "description": "",
           "links": [],
@@ -1955,10 +2031,86 @@
           }
         }
       },
-      "panel-22": {
+      "panel-23": {
         "kind": "Panel",
         "spec": {
-          "id": 22,
+          "id": 23,
+          "title": "Cache hit rate",
+          "description": "Share of input tokens served from the prompt cache",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "spec": {
+                        "expr": "sum(increase(llm_tokens_total{job=~\"$service\", provider=~\"$provider\", model=~\"$model\", token_type=\"cached_input\"}[$__range])) / sum(increase(llm_tokens_total{job=~\"$service\", provider=~\"$provider\", model=~\"$model\", token_type=~\"input|cached_input\"}[$__range]))",
+                        "legendFormat": ""
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "",
+            "spec": {
+              "options": {
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "colorMode": "value",
+                "graphMode": "none",
+                "textMode": "auto",
+                "justifyMode": "auto"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "percentunit",
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "color": "text",
+                        "value": null
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "decimals": 1
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-24": {
+        "kind": "Panel",
+        "spec": {
+          "id": 24,
           "title": "Spend share by provider",
           "description": "",
           "links": [],
@@ -2024,10 +2176,10 @@
           }
         }
       },
-      "panel-23": {
+      "panel-25": {
         "kind": "Panel",
         "spec": {
-          "id": 23,
+          "id": 25,
           "title": "Spend by model",
           "description": "",
           "links": [],
@@ -2097,10 +2249,169 @@
           }
         }
       },
-      "panel-24": {
+      "panel-26": {
         "kind": "Panel",
         "spec": {
-          "id": 24,
+          "id": 26,
+          "title": "Spend by token type",
+          "description": "Uncached input vs cached input vs output. Rates come from pricing.yaml.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "spec": {
+                        "expr": "sum by (token_type) (increase(llm_cost_usd_total{job=~\"$service\", provider=~\"$provider\", model=~\"$model\"}[$__interval]))",
+                        "legendFormat": "{{token_type}}"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "",
+            "spec": {
+              "options": {
+                "legend": {
+                  "displayMode": "table",
+                  "placement": "bottom",
+                  "showLegend": true,
+                  "calcs": [
+                    "sum"
+                  ]
+                },
+                "tooltip": {
+                  "mode": "multi",
+                  "sort": "desc"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "currencyUSD",
+                  "custom": {
+                    "fillOpacity": 60,
+                    "lineWidth": 1,
+                    "showPoints": "never",
+                    "drawStyle": "bars",
+                    "stacking": {
+                      "mode": "normal"
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-27": {
+        "kind": "Panel",
+        "spec": {
+          "id": 27,
+          "title": "Spend by pricing version",
+          "description": "Cost is computed when each request is recorded and labelled with the rate-table version, so changing pricing.yaml never rewrites spend already stored.",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "prometheus",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "prometheus"
+                      },
+                      "spec": {
+                        "expr": "sum by (pricing_version, provider, model) (increase(llm_cost_usd_total{job=~\"$service\", provider=~\"$provider\", model=~\"$model\"}[$__range]))",
+                        "legendFormat": "",
+                        "instant": true,
+                        "range": false,
+                        "format": "table"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "merge",
+                  "spec": {
+                    "options": {}
+                  }
+                },
+                {
+                  "kind": "Transformation",
+                  "group": "organize",
+                  "spec": {
+                    "options": {
+                      "excludeByName": {
+                        "Time": true
+                      },
+                      "renameByName": {
+                        "Value #A": "Spend (USD)",
+                        "Value": "Spend (USD)"
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "table",
+            "version": "",
+            "spec": {
+              "options": {
+                "showHeader": true,
+                "cellHeight": "sm",
+                "sortBy": [
+                  {
+                    "displayName": "Spend (USD)",
+                    "desc": true
+                  }
+                ]
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "currencyUSD"
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-28": {
+        "kind": "Panel",
+        "spec": {
+          "id": 28,
           "title": "Tokens / min by model",
           "description": "",
           "links": [],
@@ -2171,10 +2482,10 @@
           }
         }
       },
-      "panel-25": {
+      "panel-29": {
         "kind": "Panel",
         "spec": {
-          "id": 25,
+          "id": 29,
           "title": "Latency percentiles",
           "description": "Full request duration, from send to last token.",
           "links": [],
@@ -2283,10 +2594,10 @@
           }
         }
       },
-      "panel-26": {
+      "panel-30": {
         "kind": "Panel",
         "spec": {
-          "id": 26,
+          "id": 30,
           "title": "Time to first token percentiles",
           "description": "Recorded for streaming calls (chat() streams by default; track() via call.first_token()).",
           "links": [],
@@ -2395,10 +2706,10 @@
           }
         }
       },
-      "panel-27": {
+      "panel-31": {
         "kind": "Panel",
         "spec": {
-          "id": 27,
+          "id": 31,
           "title": "p95 latency by model",
           "description": "",
           "links": [],
@@ -2469,10 +2780,10 @@
           }
         }
       },
-      "panel-28": {
+      "panel-32": {
         "kind": "Panel",
         "spec": {
-          "id": 28,
+          "id": 32,
           "title": "p95 time to first token by model",
           "description": "",
           "links": [],
@@ -2543,10 +2854,10 @@
           }
         }
       },
-      "panel-29": {
+      "panel-33": {
         "kind": "Panel",
         "spec": {
-          "id": 29,
+          "id": 33,
           "title": "Errors / min by type",
           "description": "rate_limit_429, server_error_5xx, auth_401/403, client_error_4xx, timeout, connection_error.",
           "links": [],
@@ -2617,10 +2928,10 @@
           }
         }
       },
-      "panel-30": {
+      "panel-34": {
         "kind": "Panel",
         "spec": {
-          "id": 30,
+          "id": 34,
           "title": "Rate limits (429) / min by model",
           "description": "",
           "links": [],
@@ -2691,10 +3002,10 @@
           }
         }
       },
-      "panel-31": {
+      "panel-35": {
         "kind": "Panel",
         "spec": {
-          "id": 31,
+          "id": 35,
           "title": "Recent LLM traces",
           "description": "Click a trace ID to open it in Tempo.",
           "links": [],
@@ -2744,10 +3055,10 @@
           }
         }
       },
-      "panel-32": {
+      "panel-36": {
         "kind": "Panel",
         "spec": {
-          "id": 32,
+          "id": 36,
           "title": "Slow requests (> 3s)",
           "description": "",
           "links": [],
@@ -2797,10 +3108,10 @@
           }
         }
       },
-      "panel-33": {
+      "panel-37": {
         "kind": "Panel",
         "spec": {
-          "id": 33,
+          "id": 37,
           "title": "Failed requests",
           "description": "",
           "links": [],
@@ -2850,10 +3161,10 @@
           }
         }
       },
-      "panel-34": {
+      "panel-38": {
         "kind": "Panel",
         "spec": {
-          "id": 34,
+          "id": 38,
           "title": "LLM request events",
           "description": "",
           "links": [],
@@ -2909,10 +3220,10 @@
           }
         }
       },
-      "panel-35": {
+      "panel-39": {
         "kind": "Panel",
         "spec": {
-          "id": 35,
+          "id": 39,
           "title": "Prompts & responses (only when PROMPT_LOGGING=on)",
           "description": "",
           "links": [],
@@ -3233,7 +3544,7 @@
                       "spec": {
                         "x": 0,
                         "y": 0,
-                        "width": 6,
+                        "width": 4,
                         "height": 4,
                         "element": {
                           "kind": "ElementReference",
@@ -3244,9 +3555,9 @@
                     {
                       "kind": "GridLayoutItem",
                       "spec": {
-                        "x": 6,
+                        "x": 4,
                         "y": 0,
-                        "width": 6,
+                        "width": 4,
                         "height": 4,
                         "element": {
                           "kind": "ElementReference",
@@ -3257,9 +3568,9 @@
                     {
                       "kind": "GridLayoutItem",
                       "spec": {
-                        "x": 12,
+                        "x": 8,
                         "y": 0,
-                        "width": 6,
+                        "width": 4,
                         "height": 4,
                         "element": {
                           "kind": "ElementReference",
@@ -3270,13 +3581,39 @@
                     {
                       "kind": "GridLayoutItem",
                       "spec": {
-                        "x": 18,
+                        "x": 12,
                         "y": 0,
-                        "width": 6,
+                        "width": 4,
                         "height": 4,
                         "element": {
                           "kind": "ElementReference",
                           "name": "panel-21"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 16,
+                        "y": 0,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-22"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 20,
+                        "y": 0,
+                        "width": 4,
+                        "height": 4,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-23"
                         }
                       }
                     },
@@ -3289,7 +3626,7 @@
                         "height": 9,
                         "element": {
                           "kind": "ElementReference",
-                          "name": "panel-22"
+                          "name": "panel-24"
                         }
                       }
                     },
@@ -3302,7 +3639,7 @@
                         "height": 9,
                         "element": {
                           "kind": "ElementReference",
-                          "name": "panel-23"
+                          "name": "panel-25"
                         }
                       }
                     },
@@ -3311,11 +3648,37 @@
                       "spec": {
                         "x": 0,
                         "y": 13,
+                        "width": 12,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-26"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 12,
+                        "y": 13,
+                        "width": 12,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-27"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 21,
                         "width": 24,
                         "height": 8,
                         "element": {
                           "kind": "ElementReference",
-                          "name": "panel-24"
+                          "name": "panel-28"
                         }
                       }
                     }
@@ -3341,7 +3704,7 @@
                         "height": 8,
                         "element": {
                           "kind": "ElementReference",
-                          "name": "panel-25"
+                          "name": "panel-29"
                         }
                       }
                     },
@@ -3354,59 +3717,59 @@
                         "height": 8,
                         "element": {
                           "kind": "ElementReference",
-                          "name": "panel-26"
-                        }
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "x": 0,
-                        "y": 8,
-                        "width": 12,
-                        "height": 8,
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-27"
-                        }
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "x": 12,
-                        "y": 8,
-                        "width": 12,
-                        "height": 8,
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-28"
-                        }
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "x": 0,
-                        "y": 16,
-                        "width": 12,
-                        "height": 8,
-                        "element": {
-                          "kind": "ElementReference",
-                          "name": "panel-29"
-                        }
-                      }
-                    },
-                    {
-                      "kind": "GridLayoutItem",
-                      "spec": {
-                        "x": 12,
-                        "y": 16,
-                        "width": 12,
-                        "height": 8,
-                        "element": {
-                          "kind": "ElementReference",
                           "name": "panel-30"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 8,
+                        "width": 12,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-31"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 12,
+                        "y": 8,
+                        "width": 12,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-32"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 0,
+                        "y": 16,
+                        "width": 12,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-33"
+                        }
+                      }
+                    },
+                    {
+                      "kind": "GridLayoutItem",
+                      "spec": {
+                        "x": 12,
+                        "y": 16,
+                        "width": 12,
+                        "height": 8,
+                        "element": {
+                          "kind": "ElementReference",
+                          "name": "panel-34"
                         }
                       }
                     }
@@ -3432,7 +3795,7 @@
                         "height": 8,
                         "element": {
                           "kind": "ElementReference",
-                          "name": "panel-31"
+                          "name": "panel-35"
                         }
                       }
                     },
@@ -3445,7 +3808,7 @@
                         "height": 10,
                         "element": {
                           "kind": "ElementReference",
-                          "name": "panel-32"
+                          "name": "panel-36"
                         }
                       }
                     },
@@ -3458,7 +3821,7 @@
                         "height": 10,
                         "element": {
                           "kind": "ElementReference",
-                          "name": "panel-33"
+                          "name": "panel-37"
                         }
                       }
                     },
@@ -3471,7 +3834,7 @@
                         "height": 10,
                         "element": {
                           "kind": "ElementReference",
-                          "name": "panel-34"
+                          "name": "panel-38"
                         }
                       }
                     },
@@ -3484,7 +3847,7 @@
                         "height": 10,
                         "element": {
                           "kind": "ElementReference",
-                          "name": "panel-35"
+                          "name": "panel-39"
                         }
                       }
                     }
